@@ -19,6 +19,7 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,6 +28,13 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
+
+    /**
+     * Допуск при сравнении присланных дат с текущим моментом. Клиент вычисляет даты до отправки
+     * запроса, поэтому дата «через секунду» может дойти до сервера уже устаревшей; кроме того,
+     * часы клиента и сервера расходятся. Допуск заведомо меньше любого осмысленного «прошлого».
+     */
+    private static final Duration CLOCK_TOLERANCE = Duration.ofMinutes(1);
 
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
@@ -44,6 +52,13 @@ public class BookingServiceImpl implements BookingService {
         if (item.getOwner().getId().equals(userId)) {
             throw new NotFoundException(
                     "Владелец не может забронировать собственную вещь с id=%d".formatted(item.getId()));
+        }
+        LocalDateTime earliestAllowed = LocalDateTime.now().minus(CLOCK_TOLERANCE);
+        if (request.getStart().isBefore(earliestAllowed)) {
+            throw new ValidationException("Дата начала бронирования не может быть в прошлом");
+        }
+        if (request.getEnd().isBefore(earliestAllowed)) {
+            throw new ValidationException("Дата окончания бронирования не может быть в прошлом");
         }
         if (!request.getStart().isBefore(request.getEnd())) {
             throw new ValidationException("Дата начала бронирования должна быть раньше даты окончания");

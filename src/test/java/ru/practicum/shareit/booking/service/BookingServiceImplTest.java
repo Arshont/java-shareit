@@ -105,6 +105,41 @@ class BookingServiceImplTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void create_withStartLongInPast_throwsValidation() {
+        NewBookingRequest request = new NewBookingRequest();
+        request.setItemId(this.item.getId());
+        request.setStart(LocalDateTime.now().minusDays(1).withNano(0));
+        request.setEnd(this.end);
+
+        assertThatThrownBy(() -> this.bookingService.create(this.booker.getId(), request))
+                .isInstanceOf(ValidationException.class);
+    }
+
+    @Test
+    void create_withEndLongInPast_throwsValidation() {
+        NewBookingRequest request = new NewBookingRequest();
+        request.setItemId(this.item.getId());
+        request.setStart(LocalDateTime.now().minusDays(3).withNano(0));
+        request.setEnd(LocalDateTime.now().minusDays(2).withNano(0));
+
+        assertThatThrownBy(() -> this.bookingService.create(this.booker.getId(), request))
+                .isInstanceOf(ValidationException.class);
+    }
+
+    @Test
+    void create_withStartJustMissedByRequestLatency_succeeds() {
+        NewBookingRequest request = new NewBookingRequest();
+        request.setItemId(this.item.getId());
+        request.setStart(LocalDateTime.now().minusSeconds(5).withNano(0));
+        request.setEnd(LocalDateTime.now().plusHours(1).withNano(0));
+
+        BookingDto created = this.bookingService.create(this.booker.getId(), request);
+
+        assertThat(created.getId()).isNotNull();
+        assertThat(created.getStatus()).isEqualTo(BookingStatus.WAITING);
+    }
+
+    @Test
     void approve_byOwner_setsApproved() {
         Booking booking = this.createBooking(this.item, this.booker, this.start, this.end,
                 BookingStatus.WAITING);

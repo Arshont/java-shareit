@@ -1,12 +1,15 @@
 package ru.practicum.shareit.booking.dto;
 
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Проверка дат на «не в прошлом» живёт в {@code BookingServiceImpl}, а не здесь:
+ * {@code @FutureOrPresent} сравнивает с текущим моментом без допуска, а клиент формирует
+ * даты до отправки запроса, поэтому близкая к «сейчас» дата успевает устареть в пути.
+ */
 @Data
 public class NewBookingRequest {
 
@@ -14,10 +17,8 @@ public class NewBookingRequest {
     private Long itemId;
 
     @NotNull(message = "дата начала обязательна")
-    @FutureOrPresent(message = "дата начала не может быть в прошлом")
     private LocalDateTime start;
 
     @NotNull(message = "дата окончания обязательна")
-    @Future(message = "дата окончания должна быть в будущем")
     private LocalDateTime end;
 }
