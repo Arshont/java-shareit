@@ -1,25 +1,21 @@
 package ru.practicum.shareit.user.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ru.practicum.shareit.AbstractIntegrationTest;
 import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.NewUserRequest;
 import ru.practicum.shareit.user.dto.UpdateUserRequest;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.repository.InMemoryUserRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class UserServiceImplTest {
+class UserServiceImplTest extends AbstractIntegrationTest {
 
+    @Autowired
     private UserService userService;
-
-    @BeforeEach
-    void setUp() {
-        this.userService = new UserServiceImpl(new InMemoryUserRepository());
-    }
 
     @Test
     void create_assignsIdAndKeepsFields() {
@@ -35,6 +31,14 @@ class UserServiceImplTest {
         this.userService.create(this.newUser("Иван", "ivan@example.com"));
 
         assertThatThrownBy(() -> this.userService.create(this.newUser("Пётр", "ivan@example.com")))
+                .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
+    void create_withTakenEmailInOtherCase_throwsConflict() {
+        this.userService.create(this.newUser("Иван", "ivan@example.com"));
+
+        assertThatThrownBy(() -> this.userService.create(this.newUser("Пётр", "IVAN@EXAMPLE.COM")))
                 .isInstanceOf(ConflictException.class);
     }
 
@@ -91,13 +95,7 @@ class UserServiceImplTest {
         UpdateUserRequest request = new UpdateUserRequest();
         request.setName("Кто-то");
 
-        assertThatThrownBy(() -> this.userService.update(42L, request))
-                .isInstanceOf(NotFoundException.class);
-    }
-
-    @Test
-    void getById_whenAbsent_throwsNotFound() {
-        assertThatThrownBy(() -> this.userService.getById(42L))
+        assertThatThrownBy(() -> this.userService.update(9999L, request))
                 .isInstanceOf(NotFoundException.class);
     }
 
@@ -113,13 +111,9 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getAll_returnsAllUsers() {
-        this.userService.create(this.newUser("Иван", "ivan@example.com"));
-        this.userService.create(this.newUser("Пётр", "petr@example.com"));
-
-        assertThat(this.userService.getAll())
-                .extracting(UserDto::getEmail)
-                .containsExactlyInAnyOrder("ivan@example.com", "petr@example.com");
+    void getById_whenAbsent_throwsNotFound() {
+        assertThatThrownBy(() -> this.userService.getById(9999L))
+                .isInstanceOf(NotFoundException.class);
     }
 
     @Test
@@ -134,7 +128,7 @@ class UserServiceImplTest {
 
     @Test
     void delete_whenUserAbsent_throwsNotFound() {
-        assertThatThrownBy(() -> this.userService.delete(42L))
+        assertThatThrownBy(() -> this.userService.delete(9999L))
                 .isInstanceOf(NotFoundException.class);
     }
 

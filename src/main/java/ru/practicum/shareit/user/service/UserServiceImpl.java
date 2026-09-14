@@ -3,6 +3,7 @@ package ru.practicum.shareit.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.NewUserRequest;
@@ -18,11 +19,13 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public UserDto create(NewUserRequest request) {
         this.ensureEmailIsFree(request.getEmail());
         User saved = this.userRepository.save(UserMapper.toUser(request));
@@ -31,6 +34,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDto update(Long userId, UpdateUserRequest request) {
         User existing = this.findUserOrThrow(userId);
         if (request.hasEmail()) {
@@ -55,6 +59,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void delete(Long userId) {
         this.findUserOrThrow(userId);
         this.userRepository.deleteById(userId);
@@ -71,7 +76,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void ensureEmailIsFree(String email, Long excludedUserId) {
-        Optional<User> owner = this.userRepository.findByEmail(email);
+        Optional<User> owner = this.userRepository.findByEmailIgnoreCase(email);
         if (owner.isPresent() && !owner.get().getId().equals(excludedUserId)) {
             throw new ConflictException("Email %s уже используется".formatted(email));
         }
