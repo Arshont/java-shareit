@@ -41,6 +41,16 @@ class ErrorHandlerTest {
     }
 
     @Test
+    void handleValidation_returnsBadRequestWithMessage() {
+        ResponseEntity<ErrorResponse> response =
+                this.errorHandler.handleValidation(new ValidationException("Дата начала позже даты конца"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getError()).isEqualTo("Дата начала позже даты конца");
+    }
+
+    @Test
     void handleThrowable_returnsInternalServerError() {
         ResponseEntity<ErrorResponse> response =
                 this.errorHandler.handleThrowable(new IllegalStateException("Что-то пошло не так"));

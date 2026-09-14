@@ -13,4 +13,8 @@ public class NotFoundException extends RuntimeException {
     public static NotFoundException item(Long itemId) {
         return new NotFoundException("Вещь с id=%d не найдена".formatted(itemId));
     }
+
+    public static NotFoundException booking(Long bookingId) {
+        return new NotFoundException("Бронирование с id=%d не найдено".formatted(bookingId));
+    }
 }
