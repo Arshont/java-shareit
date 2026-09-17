@@ -25,10 +25,11 @@ class UserMapperTest {
 
     @Test
     void toUserDto_copiesAllFields() {
-        User user = new User();
-        user.setId(7L);
-        user.setName("Иван");
-        user.setEmail("ivan@example.com");
+        User user = User.builder()
+                .id(7L)
+                .name("Иван")
+                .email("ivan@example.com")
+                .build();
 
         UserDto dto = UserMapper.toUserDto(user);
 
@@ -75,10 +76,10 @@ class UserMapperTest {
     }
 
     private User existingUser() {
-        User user = new User();
-        user.setId(1L);
-        user.setName("Старое имя");
-        user.setEmail("old@example.com");
-        return user;
+        return User.builder()
+                .id(1L)
+                .name("Старое имя")
+                .email("old@example.com")
+                .build();
     }
 }

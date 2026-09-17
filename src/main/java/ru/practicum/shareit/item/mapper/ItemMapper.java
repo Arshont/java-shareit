@@ -2,22 +2,28 @@ package ru.practicum.shareit.item.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import ru.practicum.shareit.booking.dto.BookingShortDto;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
 import ru.practicum.shareit.item.dto.NewItemRequest;
 import ru.practicum.shareit.item.dto.UpdateItemRequest;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.model.User;
+
+import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ItemMapper {
 
-    public static Item toItem(NewItemRequest request, Long ownerId) {
-        Item item = new Item();
-        item.setName(request.getName());
-        item.setDescription(request.getDescription());
-        item.setAvailable(request.getAvailable());
-        item.setOwnerId(ownerId);
-        item.setRequestId(request.getRequestId());
-        return item;
+    public static Item toItem(NewItemRequest request, User owner) {
+        return Item.builder()
+                .name(request.getName())
+                .description(request.getDescription())
+                .available(request.getAvailable())
+                .owner(owner)
+                .requestId(request.getRequestId())
+                .build();
     }
 
     public static ItemDto toItemDto(Item item) {
@@ -27,6 +33,21 @@ public final class ItemMapper {
                 item.getDescription(),
                 item.getAvailable(),
                 item.getRequestId()
+        );
+    }
+
+    public static ItemWithBookingsDto toItemWithBookingsDto(Item item, BookingShortDto lastBooking,
+                                                            BookingShortDto nextBooking,
+                                                            List<CommentDto> comments) {
+        return new ItemWithBookingsDto(
+                item.getId(),
+                item.getName(),
+                item.getDescription(),
+                item.getAvailable(),
+                item.getRequestId(),
+                lastBooking,
+                nextBooking,
+                comments
         );
     }
 
